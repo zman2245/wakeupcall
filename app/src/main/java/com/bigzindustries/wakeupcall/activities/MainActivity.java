@@ -149,15 +149,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean needsStandardPermissions() {
         int readPhoneState = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_PHONE_STATE);
-        int readPhoneNumbers = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_PHONE_NUMBERS);
         int dND = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_NOTIFICATION_POLICY);
 
-        Log.d("Main", "readPhoneState=" + readPhoneState + ", readPhoneNumbers=" + readPhoneNumbers);
+        Log.d("Main", "readPhoneState=" + readPhoneState + ", dnd=" + dND);
 
         return readPhoneState == PackageManager.PERMISSION_DENIED ||
-                readPhoneNumbers == PackageManager.PERMISSION_DENIED ||
                 dND == PackageManager.PERMISSION_DENIED;
     }
 
@@ -173,10 +170,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void promptForStandardPermissions() {
+        // Reminder: Manifest.permission.READ_PHONE_NUMBERS is a subset of READ_PHONE_STATE
         if (needsStandardPermissions()) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_PHONE_STATE,
-                            Manifest.permission.READ_PHONE_NUMBERS,
                             Manifest.permission.ACCESS_NOTIFICATION_POLICY},
                     REQUEST_CODE_ALARM_PERMISSIONS);
         }
