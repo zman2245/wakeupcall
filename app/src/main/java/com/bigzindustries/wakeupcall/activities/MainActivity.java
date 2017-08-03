@@ -38,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Button addButton;
     private ListView alarmContactsList;
+    private View permissionInfo;
+    private Button standardPermissionButton;
+    private Button doNotDisturbPermissionButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +51,11 @@ public class MainActivity extends AppCompatActivity {
 
         addButton = (Button)findViewById(R.id.add_button);
         alarmContactsList = (ListView)findViewById(R.id.alarm_contacts_list);
+        permissionInfo = findViewById(R.id.permission_info);
 
         // get this out of the way right away; critical for basic app function
-        handleAlarmPermissions();
-        handleDoNotDisturbPermissions();
+        promptForStandardPermissions();
+        promptForDoNotDisturbPermissions();
 
         configList();
 
@@ -127,7 +131,20 @@ public class MainActivity extends AppCompatActivity {
         Log.d("ContactPicker", "Inserted row into DB. id=" + id);
     }
 
-    private void handleAlarmPermissions() {
+    private void updatePermissionInfoViews() {
+        boolean needsStandard = needsStandardPermissions();
+        boolean needsDoNotDisturb = needsDoNotDisturbPermissions();
+
+        if (needsDoNotDisturb || needsStandard) {
+            permissionInfo.setVisibility(View.VISIBLE);
+        } else {
+            permissionInfo.setVisibility(View.GONE);
+        }
+
+
+    }
+
+    private boolean needsStandardPermissions() {
         int readPhoneState = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_PHONE_STATE);
         int readPhoneNumbers = ContextCompat.checkSelfPermission(this,
@@ -137,9 +154,24 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("Main", "readPhoneState=" + readPhoneState + ", readPhoneNumbers=" + readPhoneNumbers);
 
-        if (readPhoneState == PackageManager.PERMISSION_DENIED ||
+        return readPhoneState == PackageManager.PERMISSION_DENIED ||
                 readPhoneNumbers == PackageManager.PERMISSION_DENIED ||
-                dND == PackageManager.PERMISSION_DENIED) {
+                dND == PackageManager.PERMISSION_DENIED;
+    }
+
+    private boolean needsDoNotDisturbPermissions() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return false;
+        }
+
+        NotificationManager notificationManager =
+                (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        return !notificationManager.isNotificationPolicyAccessGranted();
+    }
+
+    private void promptForStandardPermissions() {
+        if (needsStandardPermissions()) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_PHONE_STATE,
                             Manifest.permission.READ_PHONE_NUMBERS,
@@ -148,13 +180,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void handleDoNotDisturbPermissions() {
-        NotificationManager notificationManager =
-                (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                && !notificationManager.isNotificationPolicyAccessGranted()) {
-
+    private void promptForDoNotDisturbPermissions() {
+        if (needsDoNotDisturbPermissions()) {
             DoNotDisturbPermissionDialog dialog = new DoNotDisturbPermissionDialog();
             dialog.show(getFragmentManager(), DIALOG_TAG);
         }
