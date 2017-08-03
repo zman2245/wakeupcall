@@ -23,13 +23,15 @@
 
         <Button
             android:id="@+id/standard_permission_button"
-            android:layout_width="150dp"
-            android:layout_height="50dp" />
+            android:layout_width="260dp"
+            android:layout_height="50dp"
+            android:text="Allow Phone Permissions"/>
 
         <Button
             android:id="@+id/dnd_permission_button"
-            android:layout_width="150dp"
-            android:layout_height="50dp" />
+            android:layout_width="260dp"
+            android:layout_height="50dp"
+            android:text="Allow 'Do Not Disturb' Access"/>
     </LinearLayout>
 
     <TextView

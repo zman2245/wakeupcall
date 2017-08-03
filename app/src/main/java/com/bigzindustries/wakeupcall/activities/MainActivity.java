@@ -52,19 +52,20 @@ public class MainActivity extends AppCompatActivity {
         addButton = (Button)findViewById(R.id.add_button);
         alarmContactsList = (ListView)findViewById(R.id.alarm_contacts_list);
         permissionInfo = findViewById(R.id.permission_info);
+        standardPermissionButton = (Button)findViewById(R.id.standard_permission_button);
+        doNotDisturbPermissionButton = (Button)findViewById(R.id.dnd_permission_button);
+
+        updatePermissionInfoViews();
+
+        configList();
+
+        addButton.setOnClickListener(view -> handleAddButtonClick());
+        standardPermissionButton.setOnClickListener((view) -> promptForStandardPermissions());
+        doNotDisturbPermissionButton.setOnClickListener((view) -> promptForDoNotDisturbPermissions());
 
         // get this out of the way right away; critical for basic app function
         promptForStandardPermissions();
         promptForDoNotDisturbPermissions();
-
-        configList();
-
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                handleAddButtonClick();
-            }
-        });
     }
 
     private void configList() {
@@ -141,7 +142,8 @@ public class MainActivity extends AppCompatActivity {
             permissionInfo.setVisibility(View.GONE);
         }
 
-
+        doNotDisturbPermissionButton.setVisibility(needsDoNotDisturb ? View.VISIBLE : View.GONE);
+        standardPermissionButton.setVisibility(needsStandard ? View.VISIBLE : View.GONE);
     }
 
     private boolean needsStandardPermissions() {
@@ -203,6 +205,9 @@ public class MainActivity extends AppCompatActivity {
 
                     // permission denied, boo!
                 }
+
+                updatePermissionInfoViews();
+
                 return;
             }
         }
