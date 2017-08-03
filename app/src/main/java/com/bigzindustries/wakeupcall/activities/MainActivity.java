@@ -23,11 +23,12 @@ import android.widget.Toast;
 
 import com.bigzindustries.wakeupcall.R;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsAdapter;
+import com.bigzindustries.wakeupcall.adapters.AlarmContactsDbDelegate;
 import com.bigzindustries.wakeupcall.db.AlarmContactsDbHelper;
 import com.bigzindustries.wakeupcall.fragments.DoNotDisturbPermissionDialog;
 import com.bigzindustries.wakeupcall.utils.Utils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AlarmContactsDbDelegate {
 
     private static final int REQUEST_CODE_ALARM_PERMISSIONS = 1;
     private static final int REQUEST_CODE_CONTACT_PICK = 2;
@@ -55,8 +56,6 @@ public class MainActivity extends AppCompatActivity {
         standardPermissionButton = (Button)findViewById(R.id.standard_permission_button);
         doNotDisturbPermissionButton = (Button)findViewById(R.id.dnd_permission_button);
 
-        updatePermissionInfoViews();
-
         configList();
 
         addButton.setOnClickListener(view -> handleAddButtonClick());
@@ -68,11 +67,18 @@ public class MainActivity extends AppCompatActivity {
         promptForDoNotDisturbPermissions();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        updatePermissionInfoViews();
+    }
+
     private void configList() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT  * FROM " + AlarmContactsDbHelper.TABLE_NAME, null);
 
-        AlarmContactsAdapter adapter = new AlarmContactsAdapter(this, cursor);
+        AlarmContactsAdapter adapter = new AlarmContactsAdapter(this, cursor, this);
         alarmContactsList.setAdapter(adapter);
     }
 
@@ -108,28 +114,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("ContactPicker", "ZZZ number : " + number + " , name : " + name);
 
                 insertAlarmContact(name, number);
-
-                // need to reset the list to account for the new addition
-                configList();
             } else {
                 Toast.makeText(this, "Something went wrong while picking contacts", Toast.LENGTH_SHORT);
             }
         }
-    }
-
-    private void insertAlarmContact(String name, String number) {
-//      Gets the data repository in write mode
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-//      Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put("name", name);
-        values.put("number", number);
-
-//      Insert the new row, returning the primary key value of the new row
-        long id = db.insert(AlarmContactsDbHelper.TABLE_NAME, null, values);
-
-        Log.d("ContactPicker", "Inserted row into DB. id=" + id);
     }
 
     private void updatePermissionInfoViews() {
@@ -208,6 +196,31 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
+    }
+
+    @Override
+    public void removeAlarmContact(String number) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        db.delete(AlarmContactsDbHelper.TABLE_NAME, "number=?", new String[] {number});
+
+        // need to reset the list to account for the removal
+        configList();
+    }
+
+    private void insertAlarmContact(String name, String number) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("name", name);
+        values.put("number", number);
+
+        long id = db.insert(AlarmContactsDbHelper.TABLE_NAME, null, values);
+
+        Log.d("ContactPicker", "Inserted row into DB. id=" + id);
+
+        // need to reset the list to account for the addition
+        configList();
     }
 
 //    private void queryContactsDirectly() {

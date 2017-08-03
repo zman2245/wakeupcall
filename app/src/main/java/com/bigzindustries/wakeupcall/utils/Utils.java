@@ -1,5 +1,7 @@
 package com.bigzindustries.wakeupcall.utils;
 
+import android.telephony.PhoneNumberUtils;
+
 public class Utils {
 
     /**
@@ -7,6 +9,7 @@ public class Utils {
      * @return
      */
     public static String normalizePhoneNumber(String input) {
-        return input.replaceAll("[^\\d]", "");
+        return PhoneNumberUtils.formatNumber(input);
+        //return input.replaceAll("[^\\d]", "");
     }
 }

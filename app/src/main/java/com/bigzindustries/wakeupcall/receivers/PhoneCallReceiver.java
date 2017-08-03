@@ -10,6 +10,8 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
+import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -26,7 +28,7 @@ public class PhoneCallReceiver extends BroadcastReceiver {
         Log.d("CallStateChanged", "action=" + intent.getAction());
 
         if (intent.getAction().equals("android.intent.action.NEW_OUTGOING_CALL")) {
-//            savedNumber = intent.getExtras().getString("android.intent.extra.PHONE_NUMBER");
+            // savedNumber = intent.getExtras().getString("android.intent.extra.PHONE_NUMBER");
         } else {
             // detecting incoming phone call
             String stateStr = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
