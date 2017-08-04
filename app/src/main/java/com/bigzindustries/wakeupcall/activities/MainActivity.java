@@ -16,26 +16,40 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.SkuDetails;
 import com.bigzindustries.wakeupcall.R;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsAdapter;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsDbDelegate;
 import com.bigzindustries.wakeupcall.db.AlarmContactsDbHelper;
 import com.bigzindustries.wakeupcall.fragments.DoNotDisturbPermissionDialog;
+import com.bigzindustries.wakeupcall.fragments.UpgradeDialog;
+import com.bigzindustries.wakeupcall.models.PurchaseData;
+import com.bigzindustries.wakeupcall.utils.InAppPurchaseManager;
 import com.bigzindustries.wakeupcall.utils.Utils;
+import com.bigzindustries.wakeupcall.utils.WakeUpCallPurchasesListener;
 
-public class MainActivity extends AppCompatActivity implements AlarmContactsDbDelegate {
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity
+        implements AlarmContactsDbDelegate, WakeUpCallPurchasesListener {
 
     private static final int REQUEST_CODE_ALARM_PERMISSIONS = 1;
     private static final int REQUEST_CODE_CONTACT_PICK = 2;
 
-    private static final String DIALOG_TAG = "DoNotDisturbPermissionDialog";
+    private static final String DND_DIALOG_TAG = "DoNotDisturbPermissionDialog";
+    private static final String UPGRADE_DIALOG_TAG = "UpgradeDialog";
 
     private AlarmContactsDbHelper dbHelper;
+    private InAppPurchaseManager purchaseHelper;
 
     private Button addButton;
     private ListView alarmContactsList;
@@ -49,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements AlarmContactsDbDe
         setContentView(R.layout.activity_main);
 
         dbHelper = new AlarmContactsDbHelper(this);
+        purchaseHelper = new InAppPurchaseManager(this);
 
         addButton = (Button)findViewById(R.id.add_button);
         alarmContactsList = (ListView)findViewById(R.id.alarm_contacts_list);
@@ -71,7 +86,41 @@ public class MainActivity extends AppCompatActivity implements AlarmContactsDbDe
     protected void onResume() {
         super.onResume();
 
+        purchaseHelper.startDataLoad(this);
+
         updatePermissionInfoViews();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem upgradeItm = menu.findItem(R.id.menu_item_upgrade);
+        upgradeItm.setVisible(purchaseHelper.getPurchaseData().isDataReady());
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_upgrade:
+                showStore();
+                return true;
+        }
+
+        return false;
+    }
+
+    private void showStore() {
+        UpgradeDialog dialog = new UpgradeDialog(purchaseHelper.getPurchaseData());
+        dialog.show(getFragmentManager(), UPGRADE_DIALOG_TAG);
     }
 
     private void configList() {
@@ -170,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements AlarmContactsDbDe
     private void promptForDoNotDisturbPermissions() {
         if (needsDoNotDisturbPermissions()) {
             DoNotDisturbPermissionDialog dialog = new DoNotDisturbPermissionDialog();
-            dialog.show(getFragmentManager(), DIALOG_TAG);
+            dialog.show(getFragmentManager(), DND_DIALOG_TAG);
         }
     }
 
@@ -221,6 +270,18 @@ public class MainActivity extends AppCompatActivity implements AlarmContactsDbDe
 
         // need to reset the list to account for the addition
         configList();
+    }
+
+    @Override
+    public void onPurchaseDataUpdate(PurchaseData purchaseData) {
+        invalidateOptionsMenu();
+        SkuDetails.SkuDetailsResult results = purchaseData.getSkuDetailsResult();
+
+        for (SkuDetails skuDetails : results.getSkuDetailsList()) {
+            String sku = skuDetails.getSku();
+            String price = skuDetails.getPrice();
+            String title = skuDetails.getTitle();
+        }
     }
 
 //    private void queryContactsDirectly() {

@@ -10,7 +10,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.bigzindustries.wakeupcall.R;
-import com.bigzindustries.wakeupcall.db.AlarmContactsDbHelper;
 
 public class AlarmContactsAdapter extends CursorAdapter {
 
@@ -37,8 +36,7 @@ public class AlarmContactsAdapter extends CursorAdapter {
         // Populate fields with extracted cursor properties
         name.setText(cursor.getString(cursor.getColumnIndexOrThrow("name")));
         number.setText(cursor.getString(cursor.getColumnIndexOrThrow("number")));
-        remove.setOnClickListener((removeButton) -> {
-            delegate.removeAlarmContact(number.getText().toString());
-        });
+        remove.setOnClickListener((removeButton) ->
+                delegate.removeAlarmContact(number.getText().toString()));
     }
 }
