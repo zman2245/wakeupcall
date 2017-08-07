@@ -286,6 +286,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onError(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT);
+    }
+
 //    private void queryContactsDirectly() {
 //        Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI,null, null, null, null);
 //        while (cursor.moveToNext()) {

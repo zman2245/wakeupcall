@@ -57,22 +57,40 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
                 onBillingReady();
                 break;
 
-            case BillingClient.BillingResponse.USER_CANCELED:
-                Log.d(LOG_TAG, "onBillingSetupFinished. Failed due to USER_CANCELED");
-                break;
-            case BillingClient.BillingResponse.SERVICE_UNAVAILABLE:
-                Log.d(LOG_TAG, "onBillingSetupFinished. Failed due to SERVICE_UNAVAILABLE");
-                break;
-            case BillingClient.BillingResponse.BILLING_UNAVAILABLE:
-                Log.d(LOG_TAG, "onBillingSetupFinished. Failed due to BILLING_UNAVAILABLE");
-                break;
-            case BillingClient.BillingResponse.ITEM_UNAVAILABLE:
-                Log.d(LOG_TAG, "onBillingSetupFinished. Failed due to ITEM_UNAVAILABLE");
-                break;
             default:
-                Log.d(LOG_TAG, "onBillingSetupFinished. Failed due to some other error. resultCode=" + resultCode);
+                getErrorMessage("onBillingSetupFinished", resultCode);
                 break;
         }
+    }
+
+    private String getErrorMessage(String source, int resultCode) {
+        String msg;
+
+        switch (resultCode) {
+            case BillingClient.BillingResponse.OK:
+                msg = "No error";
+                break;
+
+            case BillingClient.BillingResponse.USER_CANCELED:
+                msg = "User cancelled the transaction";
+                break;
+            case BillingClient.BillingResponse.SERVICE_UNAVAILABLE:
+                msg = "Billing service is unavailable";
+                break;
+            case BillingClient.BillingResponse.BILLING_UNAVAILABLE:
+                msg = "Billing is unavailable";
+                break;
+            case BillingClient.BillingResponse.ITEM_UNAVAILABLE:
+                msg = "Item is unavailable";
+                break;
+            default:
+                msg = "Billing failed for an unknown result. Code=" + resultCode;
+                break;
+        }
+
+        Log.d(LOG_TAG, source + ". " + msg);
+
+        return msg;
     }
 
     private void onBillingReady() {
@@ -107,7 +125,8 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
 
     @Override
     public void onPurchasesUpdated(int responseCode, List<Purchase> purchases) {
-        Log.d(LOG_TAG, "onPurchasesUpdated. responseCode=" + responseCode);
+        String msg = getErrorMessage("onPurchasesUpdated", responseCode);
+
 
         this.purchases = purchases;
 
