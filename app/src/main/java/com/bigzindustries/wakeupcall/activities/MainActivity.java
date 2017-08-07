@@ -24,7 +24,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.SkuDetails;
 import com.bigzindustries.wakeupcall.R;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsAdapter;
@@ -37,8 +36,6 @@ import com.bigzindustries.wakeupcall.utils.InAppPurchaseManager;
 import com.bigzindustries.wakeupcall.utils.Utils;
 import com.bigzindustries.wakeupcall.utils.WakeUpCallPurchasesListener;
 
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity
         implements AlarmContactsDbDelegate, WakeUpCallPurchasesListener {
 
@@ -49,6 +46,7 @@ public class MainActivity extends AppCompatActivity
     private static final String UPGRADE_DIALOG_TAG = "UpgradeDialog";
 
     private AlarmContactsDbHelper dbHelper;
+
     private InAppPurchaseManager purchaseHelper;
 
     private Button addButton;
@@ -119,8 +117,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showStore() {
-        UpgradeDialog dialog = new UpgradeDialog(purchaseHelper.getPurchaseData());
+        UpgradeDialog dialog = new UpgradeDialog();
         dialog.show(getFragmentManager(), UPGRADE_DIALOG_TAG);
+    }
+
+    public InAppPurchaseManager getPurchaseHelper() {
+        return purchaseHelper;
     }
 
     private void configList() {

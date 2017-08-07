@@ -17,9 +17,9 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
 
     private static final String LOG_TAG = InAppPurchaseManager.class.getName();
 
-    public static final String UNLIMITED_CONTACTS = "Unlimited Contacts";
-    public static final String CUSTOMIZE_ALERT_SOUND = "Customize Alert Sound";
-    public static final String ALERT_ON_SMS = "Alert on SMS";
+    public static final String PRODID_UNLIMITED_CONTACTS = "unlimited_contacts";
+    public static final String PRODID_CUSTOMIZE_ALERT_SOUND = "customize_alert_sound";
+    public static final String PRODID_ALERT_ON_SMS = "alert_on_sms";
 
     private BillingClient mBillingClient;
     private final WakeUpCallPurchasesListener listener;
@@ -74,9 +74,9 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
 
         // The billing client is ready, query purchases here.
         List<String> skuList = new ArrayList<>();
-        skuList.add(UNLIMITED_CONTACTS);
-        skuList.add(CUSTOMIZE_ALERT_SOUND);
-        skuList.add(ALERT_ON_SMS);
+        skuList.add(PRODID_UNLIMITED_CONTACTS);
+        skuList.add(PRODID_CUSTOMIZE_ALERT_SOUND);
+        skuList.add(PRODID_ALERT_ON_SMS);
         mBillingClient.querySkuDetailsAsync(BillingClient.SkuType.INAPP, skuList,
                 (results) -> {
                     Log.d(LOG_TAG, "querySkuDetailsAsync completed. responseCode=" + results.getResponseCode());
