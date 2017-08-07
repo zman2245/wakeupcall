@@ -1,10 +1,12 @@
 package com.bigzindustries.wakeupcall.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
@@ -40,6 +42,10 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
 
     public PurchaseData getPurchaseData() {
         return new PurchaseData(skuDetailsResult, purchases);
+    }
+
+    public int launchBillingFlow(Activity activity, BillingFlowParams params) {
+        return mBillingClient.launchBillingFlow(activity, params);
     }
 
     @Override
