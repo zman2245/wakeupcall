@@ -1,5 +1,6 @@
 package com.bigzindustries.wakeupcall.utils;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
@@ -58,6 +59,21 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
 
     public boolean canCustomizeAlertSound() {
         return canX(PRODID_CUSTOMIZE_ALERT_SOUND);
+    }
+
+    public String[] getPermissionsToPromptFor() {
+        if (checkSMS()) {
+            return new String[] {
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.ACCESS_NOTIFICATION_POLICY,
+                Manifest.permission.READ_SMS
+            };
+        } else {
+            return new String[] {
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.ACCESS_NOTIFICATION_POLICY
+            };
+        }
     }
 
     private boolean canX(String prodId) {

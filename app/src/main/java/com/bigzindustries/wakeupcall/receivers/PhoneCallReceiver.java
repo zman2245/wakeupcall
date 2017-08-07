@@ -10,8 +10,6 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
-import android.provider.ContactsContract;
-import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -21,7 +19,7 @@ import com.bigzindustries.wakeupcall.utils.Utils;
 public class PhoneCallReceiver extends BroadcastReceiver {
 
     static final String FIND_NUMBER_QUERY =
-            "SELECT name FROM " + AlarmContactsDbHelper.TABLE_NAME + " WHERE number=?";
+            "SELECT name FROM " + AlarmContactsDbHelper.TABLE_NAME_CONTACTS + " WHERE number=?";
 
     @Override
     public void onReceive(Context context, Intent intent) {

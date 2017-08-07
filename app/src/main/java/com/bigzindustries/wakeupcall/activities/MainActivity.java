@@ -32,6 +32,7 @@ import com.bigzindustries.wakeupcall.adapters.AlarmContactsDbDelegate;
 import com.bigzindustries.wakeupcall.db.AlarmContactsDbHelper;
 import com.bigzindustries.wakeupcall.fragments.AddContactWarningDialog;
 import com.bigzindustries.wakeupcall.fragments.DoNotDisturbPermissionDialog;
+import com.bigzindustries.wakeupcall.fragments.SMSWarningDialog;
 import com.bigzindustries.wakeupcall.fragments.UpgradeDialog;
 import com.bigzindustries.wakeupcall.models.PurchaseData;
 import com.bigzindustries.wakeupcall.utils.InAppPurchaseManager;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DND_DIALOG_TAG = "DoNotDisturbPermissionDialog";
     private static final String UPGRADE_DIALOG_TAG = "UpgradeDialog";
     private static final String ADD_CONTACT_WARNING_DIALOG_TAG = "AddWarningDialog";
+    private static final String SMS_WARNING_DIALOG_TAG = "SMSWarningDialog";
 
     private AlarmContactsDbHelper dbHelper;
 
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity
     private View permissionInfo;
     private Button standardPermissionButton;
     private Button doNotDisturbPermissionButton;
+    private Button smsPermissionButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,12 +74,14 @@ public class MainActivity extends AppCompatActivity
         permissionInfo = findViewById(R.id.permission_info);
         standardPermissionButton = (Button)findViewById(R.id.standard_permission_button);
         doNotDisturbPermissionButton = (Button)findViewById(R.id.dnd_permission_button);
+        smsPermissionButton = (Button)findViewById(R.id.sms_permission_button);
 
         configList();
 
         addButton.setOnClickListener(view -> handleAddButtonClick());
         standardPermissionButton.setOnClickListener((view) -> promptForStandardPermissions());
         doNotDisturbPermissionButton.setOnClickListener((view) -> promptForDoNotDisturbPermissions());
+        smsPermissionButton.setOnClickListener(view -> promptForSmsPermissions());
 
         // get this out of the way right away; critical for basic app function
         promptForStandardPermissions();
@@ -119,6 +124,39 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    Intent intent) {
+        if (requestCode == REQUEST_CODE_CONTACT_PICK) {
+            if (resultCode == RESULT_OK) {
+                Uri uri = intent.getData();
+                String[] projection = {
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                };
+
+                Cursor cursor = getContentResolver().query(uri, projection,
+                        null, null, null);
+                cursor.moveToFirst();
+
+                int numberColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                String number = cursor.getString(numberColumnIndex);
+                number = Utils.normalizePhoneNumber(number);
+
+                int nameColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                String name = cursor.getString(nameColumnIndex);
+
+                Log.d("ContactPicker", "ZZZ number : " + number + " , name : " + name);
+
+                insertAlarmContact(name, number);
+            } else {
+                Toast.makeText(this,
+                        "Something went wrong while picking contacts",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void showStore() {
         UpgradeDialog dialog = new UpgradeDialog();
         dialog.show(getFragmentManager(), UPGRADE_DIALOG_TAG);
@@ -152,37 +190,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent intent) {
-        if (requestCode == REQUEST_CODE_CONTACT_PICK) {
-            if (resultCode == RESULT_OK) {
-                Uri uri = intent.getData();
-                String[] projection = {
-                    ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-                };
-
-                Cursor cursor = getContentResolver().query(uri, projection,
-                        null, null, null);
-                cursor.moveToFirst();
-
-                int numberColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                String number = cursor.getString(numberColumnIndex);
-                number = Utils.normalizePhoneNumber(number);
-
-                int nameColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-                String name = cursor.getString(nameColumnIndex);
-
-                Log.d("ContactPicker", "ZZZ number : " + number + " , name : " + name);
-
-                insertAlarmContact(name, number);
-            } else {
-                Toast.makeText(this, "Something went wrong while picking contacts", Toast.LENGTH_SHORT);
-            }
-        }
-    }
-
     private void updatePermissionInfoViews() {
         boolean needsStandard = needsStandardPermissions();
         boolean needsDoNotDisturb = needsDoNotDisturbPermissions();
@@ -194,6 +201,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         doNotDisturbPermissionButton.setVisibility(needsDoNotDisturb ? View.VISIBLE : View.GONE);
+
         standardPermissionButton.setVisibility(needsStandard ? View.VISIBLE : View.GONE);
     }
 
@@ -202,11 +210,14 @@ public class MainActivity extends AppCompatActivity
                 Manifest.permission.READ_PHONE_STATE);
         int dND = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_NOTIFICATION_POLICY);
+        int readSMS = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECEIVE_SMS);
 
         Log.d("Main", "readPhoneState=" + readPhoneState + ", dnd=" + dND);
 
         return readPhoneState == PackageManager.PERMISSION_DENIED ||
-                dND == PackageManager.PERMISSION_DENIED;
+                dND == PackageManager.PERMISSION_DENIED ||
+                (purchaseHelper.checkSMS() && readSMS == PackageManager.PERMISSION_DENIED);
     }
 
     private boolean needsDoNotDisturbPermissions() {
@@ -223,9 +234,10 @@ public class MainActivity extends AppCompatActivity
     private void promptForStandardPermissions() {
         // Reminder: Manifest.permission.READ_PHONE_NUMBERS is a subset of READ_PHONE_STATE
         if (needsStandardPermissions()) {
+            String[] permissions = purchaseHelper.getPermissionsToPromptFor();
+
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_PHONE_STATE,
-                            Manifest.permission.ACCESS_NOTIFICATION_POLICY},
+                    permissions,
                     REQUEST_CODE_ALARM_PERMISSIONS);
         }
     }
@@ -234,6 +246,15 @@ public class MainActivity extends AppCompatActivity
         if (needsDoNotDisturbPermissions()) {
             DoNotDisturbPermissionDialog dialog = new DoNotDisturbPermissionDialog();
             dialog.show(getFragmentManager(), DND_DIALOG_TAG);
+        }
+    }
+
+    private void promptForSmsPermissions() {
+        if (purchaseHelper.checkSMS()) {
+            promptForStandardPermissions();
+        } else {
+            SMSWarningDialog dialog = new SMSWarningDialog();
+            dialog.show(getFragmentManager(), SMS_WARNING_DIALOG_TAG);
         }
     }
 
@@ -247,17 +268,22 @@ public class MainActivity extends AppCompatActivity
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    // permission was granted, yay!
+                    // permission was granted, yay! Nothing else to do....
 
                 } else {
-
                     // permission denied, boo!
+                    Toast.makeText(this,
+                            "Failed to enable permissions, you may not hear the alarm properly.",
+                            Toast.LENGTH_SHORT).show();
                 }
 
                 updatePermissionInfoViews();
 
                 return;
             }
+
+            default:
+                Log.d("MainActiviy", "Unknown permission request code=" + requestCode);
         }
     }
 
@@ -289,13 +315,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPurchaseDataUpdate(PurchaseData purchaseData) {
         invalidateOptionsMenu();
-        SkuDetails.SkuDetailsResult results = purchaseData.getSkuDetailsResult();
 
-        for (SkuDetails skuDetails : results.getSkuDetailsList()) {
-            String sku = skuDetails.getSku();
-            String price = skuDetails.getPrice();
-            String title = skuDetails.getTitle();
-        }
+        getSharedPreferences("default", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("sms_enabled", purchaseHelper.checkSMS())
+                .commit();
     }
 
     @Override
