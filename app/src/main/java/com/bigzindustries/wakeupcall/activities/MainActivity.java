@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity
 
         AlarmContactsAdapter adapter = new AlarmContactsAdapter(this, cursor, this);
         alarmContactsList.setAdapter(adapter);
-//        alarmContactsList.setEmptyView();
+        alarmContactsList.setEmptyView(findViewById(R.id.empty_text));
     }
 
     private void handleAddButtonClick() {
