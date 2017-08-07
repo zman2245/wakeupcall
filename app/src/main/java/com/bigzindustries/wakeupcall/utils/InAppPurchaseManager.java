@@ -127,10 +127,12 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
     public void onPurchasesUpdated(int responseCode, List<Purchase> purchases) {
         String msg = getErrorMessage("onPurchasesUpdated", responseCode);
 
-
-        this.purchases = purchases;
-
-        checkDataAndNotify();
+        if (responseCode != BillingClient.BillingResponse.OK) {
+            listener.onError(msg);
+        } else {
+            this.purchases = purchases;
+            checkDataAndNotify();
+        }
     }
 
     /**

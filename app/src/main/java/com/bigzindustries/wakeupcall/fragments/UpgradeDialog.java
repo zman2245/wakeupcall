@@ -56,7 +56,7 @@ public class UpgradeDialog extends DialogFragment {
                     .setSku(skuId).setType(BillingClient.SkuType.INAPP);
             int responseCode = purchaseHelper.launchBillingFlow(activity, billingBuilder.build());
 
-            Log.d("UpgradeDialog", "Purchase response code=" + responseCode);
+            Log.d("UpgradeDialog", "Purchase response  code=" + responseCode);
 
             // PurchaseHelper listens for onPurchasesUpdated, so handling of the purcahse results
             // should go there. For here, just log the result code.
