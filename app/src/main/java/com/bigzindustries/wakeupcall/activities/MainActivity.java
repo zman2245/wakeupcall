@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.billingclient.api.SkuDetails;
@@ -49,7 +51,7 @@ public class MainActivity extends AppCompatActivity
 
     private InAppPurchaseManager purchaseHelper;
 
-    private Button addButton;
+    private FloatingActionButton addButton;
     private ListView alarmContactsList;
     private View permissionInfo;
     private Button standardPermissionButton;
@@ -63,7 +65,7 @@ public class MainActivity extends AppCompatActivity
         dbHelper = new AlarmContactsDbHelper(this);
         purchaseHelper = new InAppPurchaseManager(this);
 
-        addButton = (Button)findViewById(R.id.add_button);
+        addButton = (FloatingActionButton) findViewById(R.id.add_button);
         alarmContactsList = (ListView)findViewById(R.id.alarm_contacts_list);
         permissionInfo = findViewById(R.id.permission_info);
         standardPermissionButton = (Button)findViewById(R.id.standard_permission_button);
@@ -131,6 +133,7 @@ public class MainActivity extends AppCompatActivity
 
         AlarmContactsAdapter adapter = new AlarmContactsAdapter(this, cursor, this);
         alarmContactsList.setAdapter(adapter);
+//        alarmContactsList.setEmptyView();
     }
 
     private void handleAddButtonClick() {
