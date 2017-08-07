@@ -23,7 +23,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.billingclient.api.SkuDetails;
@@ -31,6 +30,7 @@ import com.bigzindustries.wakeupcall.R;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsAdapter;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsDbDelegate;
 import com.bigzindustries.wakeupcall.db.AlarmContactsDbHelper;
+import com.bigzindustries.wakeupcall.fragments.AddContactWarningDialog;
 import com.bigzindustries.wakeupcall.fragments.DoNotDisturbPermissionDialog;
 import com.bigzindustries.wakeupcall.fragments.UpgradeDialog;
 import com.bigzindustries.wakeupcall.models.PurchaseData;
@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final String DND_DIALOG_TAG = "DoNotDisturbPermissionDialog";
     private static final String UPGRADE_DIALOG_TAG = "UpgradeDialog";
+    private static final String ADD_CONTACT_WARNING_DIALOG_TAG = "AddWarningDialog";
 
     private AlarmContactsDbHelper dbHelper;
 
@@ -137,10 +138,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void handleAddButtonClick() {
-        // Right now, this only supports selecting one number
-        Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-        intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
-        startActivityForResult(intent, REQUEST_CODE_CONTACT_PICK);
+        if (alarmContactsList.getCount() >= 2 &&
+                !purchaseHelper.canHaveUnlimitedContacts()) {
+
+            AddContactWarningDialog dialog = new AddContactWarningDialog();
+            dialog.show(getFragmentManager(), ADD_CONTACT_WARNING_DIALOG_TAG);
+        } else {
+
+            // Right now, this only supports selecting one number
+            Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+            intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+            startActivityForResult(intent, REQUEST_CODE_CONTACT_PICK);
+        }
     }
 
     @Override

@@ -48,6 +48,32 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
         return mBillingClient.launchBillingFlow(activity, params);
     }
 
+    public boolean canHaveUnlimitedContacts() {
+        return canX(PRODID_UNLIMITED_CONTACTS);
+    }
+
+    public boolean checkSMS() {
+        return canX(PRODID_ALERT_ON_SMS);
+    }
+
+    public boolean canCustomizeAlertSound() {
+        return canX(PRODID_CUSTOMIZE_ALERT_SOUND);
+    }
+
+    private boolean canX(String prodId) {
+        if (purchases == null) {
+            return false;
+        }
+
+        for (Purchase p : purchases) {
+            if (prodId.equals(p.getSku())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public void onBillingSetupFinished(int resultCode) {
         Log.d(LOG_TAG, "onBillingSetupFinished. resultCode=" + resultCode);
@@ -112,7 +138,22 @@ public class InAppPurchaseManager implements BillingClientStateListener, Purchas
                 mBillingClient.queryPurchases(BillingClient.SkuType.INAPP);
         Log.d(LOG_TAG, "queryPurchases completed. responseCode=" + purchasesResult.getResponseCode());
         purchases = purchasesResult.getPurchasesList();
+
+        consumeAllForTesting();
+
         checkDataAndNotify();
+    }
+
+    // TODO: Remove!
+    private static int CONSUME_COUNT = 0;
+    private void consumeAllForTesting() {
+        if (CONSUME_COUNT > 0) {
+            return;
+        }
+        CONSUME_COUNT++;
+        for (Purchase p : purchases) {
+            mBillingClient.consumeAsync(p.getPurchaseToken(), null);
+        }
     }
 
     @Override

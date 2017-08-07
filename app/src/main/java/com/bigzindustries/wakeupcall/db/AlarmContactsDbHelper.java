@@ -6,14 +6,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class AlarmContactsDbHelper extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
     public static final String DATABASE_NAME = "AlarmContacts.db";
     public static final String TABLE_NAME = "AlarmContacts";
 
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + TABLE_NAME + " (" +
                     "_id INTEGER PRIMARY KEY," +
-                    "name TEXT UNIQUE," +
+                    "name TEXT," +
                     "number TEXT UNIQUE)";
 
     private static final String SQL_DELETE_ENTRIES =
