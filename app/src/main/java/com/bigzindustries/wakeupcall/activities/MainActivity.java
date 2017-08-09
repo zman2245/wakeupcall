@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity
 
         standardPermissionButton.setVisibility(needsStandard ? View.VISIBLE : View.GONE);
 
-        configList();
+        configOnOffSwitch();
     }
 
     private boolean needsAnyPermissions() {
