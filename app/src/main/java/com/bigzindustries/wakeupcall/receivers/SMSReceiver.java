@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
 
+import com.bigzindustries.wakeupcall.utils.PrefsWrapper;
+
 import java.util.HashSet;
 
 /**
@@ -21,7 +23,7 @@ public class SMSReceiver extends BroadcastReceiver {
 
         //---get the SMS message passed in---
         Bundle bundle = intent.getExtras();
-        SmsMessage[] msgs = null;
+        SmsMessage[] msgs;
         String str = "";
         HashSet<String> incomingNumbers = new HashSet<>();
 
@@ -56,7 +58,6 @@ public class SMSReceiver extends BroadcastReceiver {
     }
 
     private boolean isSmsEnabled(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences("default", Context.MODE_PRIVATE);
-        return prefs.getBoolean("sms_enabled", false) && prefs.getBoolean("global_enabled", true);
+        return PrefsWrapper.isSmsEnabled(context);
     }
 }

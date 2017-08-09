@@ -19,7 +19,7 @@ import com.bigzindustries.wakeupcall.utils.Utils;
 public class PhoneCallReceiver extends BroadcastReceiver {
 
     static final String FIND_NUMBER_QUERY =
-            "SELECT name FROM " + AlarmContactsDbHelper.TABLE_NAME_CONTACTS + " WHERE number=?";
+            "SELECT name FROM " + AlarmContactsDbHelper.TABLE_NAME + " WHERE number=?";
 
     @Override
     public void onReceive(Context context, Intent intent) {

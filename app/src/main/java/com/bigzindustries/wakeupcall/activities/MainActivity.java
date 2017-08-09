@@ -23,9 +23,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.Toast;
 
-import com.android.billingclient.api.SkuDetails;
 import com.bigzindustries.wakeupcall.R;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsAdapter;
 import com.bigzindustries.wakeupcall.adapters.AlarmContactsDbDelegate;
@@ -36,6 +36,7 @@ import com.bigzindustries.wakeupcall.fragments.SMSWarningDialog;
 import com.bigzindustries.wakeupcall.fragments.UpgradeDialog;
 import com.bigzindustries.wakeupcall.models.PurchaseData;
 import com.bigzindustries.wakeupcall.utils.InAppPurchaseManager;
+import com.bigzindustries.wakeupcall.utils.PrefsWrapper;
 import com.bigzindustries.wakeupcall.utils.Utils;
 import com.bigzindustries.wakeupcall.utils.WakeUpCallPurchasesListener;
 
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity
 
     private InAppPurchaseManager purchaseHelper;
 
+    private Switch globalOnOffSwitch;
     private FloatingActionButton addButton;
     private ListView alarmContactsList;
     private View permissionInfo;
@@ -69,6 +71,7 @@ public class MainActivity extends AppCompatActivity
         dbHelper = new AlarmContactsDbHelper(this);
         purchaseHelper = new InAppPurchaseManager(this);
 
+        globalOnOffSwitch = (Switch) findViewById(R.id.on_off);
         addButton = (FloatingActionButton) findViewById(R.id.add_button);
         alarmContactsList = (ListView)findViewById(R.id.alarm_contacts_list);
         permissionInfo = findViewById(R.id.permission_info);
@@ -77,7 +80,9 @@ public class MainActivity extends AppCompatActivity
         smsPermissionButton = (Button)findViewById(R.id.sms_permission_button);
 
         configList();
+        configOnOffSwitch();
 
+        globalOnOffSwitch.setOnCheckedChangeListener((compoundButton, b) -> handleOnOffSwitch(b));
         addButton.setOnClickListener(view -> handleAddButtonClick());
         standardPermissionButton.setOnClickListener((view) -> promptForStandardPermissions());
         doNotDisturbPermissionButton.setOnClickListener((view) -> promptForDoNotDisturbPermissions());
@@ -175,6 +180,25 @@ public class MainActivity extends AppCompatActivity
         alarmContactsList.setEmptyView(findViewById(R.id.empty_text));
     }
 
+    private void configOnOffSwitch() {
+        globalOnOffSwitch.setChecked(!needsAnyPermissions() && PrefsWrapper.isGlobalEnabled(this));
+    }
+
+    private void handleOnOffSwitch(boolean newVal) {
+        if (newVal && needsAnyPermissions()) {
+            // force state of switch to stay "false" since the app cannot actually function
+            // properly
+            globalOnOffSwitch.setChecked(false);
+
+            promptForStandardPermissions();
+            promptForDoNotDisturbPermissions();
+        }
+
+        // persist the state regardless, so that the user's intention is saved and the app
+        // functions when she does give permissions.
+        PrefsWrapper.enableGlobal(this, newVal);
+    }
+
     private void handleAddButtonClick() {
         if (alarmContactsList.getCount() >= 2 &&
                 !purchaseHelper.canHaveUnlimitedContacts()) {
@@ -203,6 +227,12 @@ public class MainActivity extends AppCompatActivity
         doNotDisturbPermissionButton.setVisibility(needsDoNotDisturb ? View.VISIBLE : View.GONE);
 
         standardPermissionButton.setVisibility(needsStandard ? View.VISIBLE : View.GONE);
+
+        configList();
+    }
+
+    private boolean needsAnyPermissions() {
+        return needsStandardPermissions() || needsDoNotDisturbPermissions();
     }
 
     private boolean needsStandardPermissions() {
@@ -316,10 +346,7 @@ public class MainActivity extends AppCompatActivity
     public void onPurchaseDataUpdate(PurchaseData purchaseData) {
         invalidateOptionsMenu();
 
-        getSharedPreferences("default", Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean("sms_enabled", purchaseHelper.checkSMS())
-                .commit();
+        PrefsWrapper.enableSms(this, purchaseHelper.checkSMS());
     }
 
     @Override
